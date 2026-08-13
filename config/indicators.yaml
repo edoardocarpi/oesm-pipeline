@@ -1,0 +1,278 @@
+# Fonte di verità per gli indicatori gestiti dalla pipeline.
+#
+# Ogni voce descrive UN indicator_code pubblico (quello che finisce nell'URL
+# /dati/[code] e non va mai rinominato una volta pubblicato con dati reali).
+#
+# Regole:
+# - "source" e "source_indicator" sono la fonte REALE dei dati, anche quando
+#   diversa dal nome dell'indicator_code pubblico (vedi NY.GDP.MKTP.CD sotto:
+#   il codice storico è quello del World Bank in USD, ma la pipeline estrae
+#   la serie in valuta locale, già in EUR, per evitare una conversione non
+#   necessaria — vedi METHODOLOGY.md).
+# - "eur_conversion" indica se il valore ha bisogno di conversione valutaria
+#   prima di essere scritto in value_eur: none | already_eur | needs_rate
+# - "status": "active" = indicatore da estrarre e scrivere regolarmente
+#             "planned" = riservato, non ancora implementato
+
+indicators:
+
+  # --- World Bank: mantenuti identici, dati reali già pubblicati ---
+  - indicator_code: FP.CPI.TOTL.ZG
+    indicator_it: "Inflazione, prezzi al consumo (%)"
+    category: prezzi
+    source: World Bank
+    source_indicator: FP.CPI.TOTL.ZG
+    eur_conversion: none
+    unit_display: "%"
+    status: active
+
+  - indicator_code: GC.XPN.TOTL.GD.ZS
+    indicator_it: "Spesa pubblica (% PIL)"
+    category: finanza_pubblica
+    source: World Bank
+    source_indicator: GC.XPN.TOTL.GD.ZS
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: NE.EXP.GNFS.ZS
+    indicator_it: "Esportazioni (% PIL)"
+    category: commercio
+    source: World Bank
+    source_indicator: NE.EXP.GNFS.ZS
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: NE.IMP.GNFS.ZS
+    indicator_it: "Importazioni (% PIL)"
+    category: commercio
+    source: World Bank
+    source_indicator: NE.IMP.GNFS.ZS
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: NE.TRD.GNFS.ZS
+    indicator_it: "Commercio totale (% PIL)"
+    category: commercio
+    source: World Bank
+    source_indicator: NE.TRD.GNFS.ZS
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: NY.GDP.MKTP.KD.ZG
+    indicator_it: "Crescita PIL reale (%)"
+    category: macroeconomia
+    source: World Bank
+    source_indicator: NY.GDP.MKTP.KD.ZG
+    eur_conversion: none
+    unit_display: "%"
+    status: active
+
+  - indicator_code: NY.GDP.MKTP.CD
+    indicator_it: "PIL a prezzi correnti"
+    category: macroeconomia
+    source: World Bank
+    # ATTENZIONE: il codice pubblico è quello WB per "current US$", ma la
+    # pipeline estrae la serie in valuta locale (= EUR per San Marino) per
+    # pubblicare un PIL in euro senza passare da una conversione USD->EUR
+    # non necessaria. Scelta editoriale documentata in METHODOLOGY.md.
+    source_indicator: NY.GDP.MKTP.CN
+    eur_conversion: already_eur
+    unit_display: "EUR"
+    status: active
+
+  - indicator_code: NY.GDP.PCAP.CD
+    indicator_it: "PIL pro capite"
+    category: macroeconomia
+    source: World Bank
+    source_indicator: NY.GDP.PCAP.CN
+    eur_conversion: already_eur
+    unit_display: "EUR"
+    status: active
+
+  - indicator_code: SP.POP.TOTL
+    indicator_it: "Popolazione totale"
+    category: generale
+    source: World Bank
+    source_indicator: SP.POP.TOTL
+    eur_conversion: none
+    unit_display: "abitanti"
+    status: active
+
+  - indicator_code: ST.INT.ARVL
+    indicator_it: "Arrivi turistici internazionali"
+    category: turismo
+    source: World Bank
+    source_indicator: ST.INT.ARVL
+    eur_conversion: none
+    unit_display: "arrivi"
+    status: active
+
+  # --- IMF: fonte primaria per i dati più recenti (WEO), da implementare ---
+  - indicator_code: IMF.GGXCNL_NGDP
+    indicator_it: "Saldo fiscale netto (% PIL)"
+    category: finanza_pubblica
+    source: International Monetary Fund
+    source_indicator: GGXCNL_NGDP
+    eur_conversion: none  # è già un rapporto %, non una cifra monetaria
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: IMF.GGXWDG_NGDP
+    indicator_it: "Debito pubblico lordo (% PIL)"
+    category: finanza_pubblica
+    source: International Monetary Fund
+    source_indicator: GGXWDG_NGDP
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: IMF.PCPIPCH
+    indicator_it: "Inflazione IPC, media annua (%)"
+    category: prezzi
+    source: International Monetary Fund
+    source_indicator: PCPIPCH
+    eur_conversion: none
+    unit_display: "%"
+    status: active
+
+  - indicator_code: IMF.PPPPC
+    indicator_it: "PIL pro capite, PPP (international $)"
+    category: macroeconomia
+    source: International Monetary Fund
+    source_indicator: PPPPC
+    # PPP non è una conversione di cambio: NON forzare in value_eur.
+    eur_conversion: not_applicable
+    unit_display: "$ PPP"
+    status: active
+
+  - indicator_code: IMF.NGDP_RPCH
+    indicator_it: "Crescita PIL reale (%)"
+    category: macroeconomia
+    source: International Monetary Fund
+    source_indicator: NGDP_RPCH
+    eur_conversion: none
+    unit_display: "%"
+    status: active
+
+  - indicator_code: IMF.LUR
+    indicator_it: "Tasso di disoccupazione (%)"
+    category: lavoro
+    source: International Monetary Fund
+    source_indicator: LUR
+    eur_conversion: none
+    unit_display: "%"
+    status: active
+
+  - indicator_code: IMF.BCA_NGDPD
+    indicator_it: "Saldo di conto corrente (% PIL)"
+    category: commercio
+    source: International Monetary Fund
+    source_indicator: BCA_NGDPD
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  # --- Secondo giro: gli indicatori IMF trovati con la scansione completa
+  # dell'API, che non si sovrappongono in modo problematico a quelli già
+  # presenti (vedi METHODOLOGY.md per i candidati scartati e perché) ---
+  - indicator_code: IMF.GGR_G01_GDP_PT
+    indicator_it: "Entrate pubbliche (% PIL)"
+    category: finanza_pubblica
+    source: International Monetary Fund
+    source_indicator: GGR_G01_GDP_PT
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: IMF.G_X_G01_GDP_PT
+    indicator_it: "Spesa pubblica (% PIL)"
+    category: finanza_pubblica
+    source: International Monetary Fund
+    source_indicator: G_X_G01_GDP_PT
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: IMF.GGXONLB_G01_GDP_PT
+    indicator_it: "Saldo primario, esclusi interessi (% PIL)"
+    category: finanza_pubblica
+    source: International Monetary Fund
+    source_indicator: GGXONLB_G01_GDP_PT
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: IMF.PCPIEPCH
+    indicator_it: "Inflazione IPC, fine periodo (%)"
+    category: prezzi
+    source: International Monetary Fund
+    source_indicator: PCPIEPCH
+    eur_conversion: none
+    unit_display: "%"
+    status: active
+
+  - indicator_code: IMF.CG_DEBT_GDP
+    indicator_it: "Debito del governo centrale (% PIL)"
+    category: finanza_pubblica
+    source: International Monetary Fund
+    source_indicator: CG_DEBT_GDP
+    eur_conversion: none
+    unit_display: "% PIL"
+    status: active
+
+  - indicator_code: IMF.LP
+    indicator_it: "Popolazione"
+    category: generale
+    source: International Monetary Fund
+    source_indicator: LP
+    eur_conversion: none
+    unit_display: "abitanti"
+    value_scale: 1000000  # la fonte pubblica in milioni di persone
+    status: active
+
+  # --- Terzo giro: stesso concetto dei precedenti ma la fonte pubblica solo
+  # in USD, non in valuta locale — richiede conversione con tasso BCE
+  # (vedi normalize/currency.py, eur_conversion: needs_rate). Per gli anni
+  # senza tasso di cambio medio annuo reale (proiezioni non ancora trascorse)
+  # value_display resta vuoto: non pubblichiamo un numero in EUR costruito
+  # su un'ipotesi di cambio futuro.
+  - indicator_code: IMF.NGDPD
+    indicator_it: "PIL a prezzi correnti"
+    category: macroeconomia
+    source: International Monetary Fund
+    source_indicator: NGDPD
+    eur_conversion: needs_rate
+    unit_display: "EUR"
+    value_scale: 1000000000  # la fonte pubblica in miliardi di USD
+    status: active
+
+  - indicator_code: IMF.NGDPDPC
+    indicator_it: "PIL pro capite a prezzi correnti"
+    category: macroeconomia
+    source: International Monetary Fund
+    source_indicator: NGDPDPC
+    eur_conversion: needs_rate
+    unit_display: "EUR"
+    status: active
+
+  - indicator_code: IMF.BCA
+    indicator_it: "Saldo di conto corrente"
+    category: commercio
+    source: International Monetary Fund
+    source_indicator: BCA
+    eur_conversion: needs_rate
+    unit_display: "EUR"
+    value_scale: 1000000000  # la fonte pubblica in miliardi di USD
+    status: active
+
+# Anni a partire dai quali un valore WEO è proiezione, non consuntivo.
+# L'API IMF DataMapper non espone questo flag per punto dato: va aggiornato
+# a mano a ogni nuova uscita del WEO (aprile e ottobre), leggendo l'appendice
+# statistica pubblicata da IMF. Vedi METHODOLOGY.md.
+weo_vintage:
+  release: "2026-04"
+  estimates_start_year: 2026  # 2025 = preliminare/consuntivo, 2026+ = proiezione
