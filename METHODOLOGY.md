@@ -1,91 +1,34 @@
 # Metodologia
 
-Questo documento spiega, per chi consulta o cita i dati di OESM.net, da dove
-vengono i numeri e come vengono trattati prima della pubblicazione. La lista
-completa e sempre aggiornata degli indicatori è in
-[`config/indicators.yaml`](./config/indicators.yaml).
+Questo documento spiega da dove vengono i numeri pubblicati su OESM.net e come vengono trattati prima di essere pubblicati.
 
 ## Fonti
 
-Due fonti internazionali, automatizzate via API ufficiali:
+I dati arrivano da due fonti internazionali, aggiornate tramite le loro API pubbliche:
 
-- **International Monetary Fund**: World Economic Outlook (WEO), via
-  [IMF DataMapper API](https://www.imf.org/external/datamapper/api/help).
-  Fonte primaria per gli indicatori più recenti: l'FMI segue San Marino con
-  consultazioni dirette (Articolo IV), quindi pubblica dati più aggiornati
-  del World Bank per lo stesso paese.
-- **World Bank**: World Development Indicators, via
-  [World Bank API](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392).
-  Usato dove copre indicatori che l'IMF non traccia con lo stesso dettaglio
-  per un microstato (commercio estero, popolazione, turismo), o come serie
-  storica più lunga a fianco di un indicatore IMF equivalente.
+- **Fondo Monetario Internazionale**, World Economic Outlook. È la fonte principale per gli indicatori più recenti: l'FMI segue San Marino con consultazioni dirette, quindi pubblica dati più aggiornati del World Bank.
+- **World Bank**, World Development Indicators. Usato dove copre indicatori che l'FMI non traccia (commercio estero, popolazione, turismo), o insieme a un indicatore FMI equivalente quando le due fonti divergono e vale la pena mostrarle entrambe.
 
-Fonti sammarinesi ufficiali (Ufficio Informatica Tecnologia Dati e Statistica /
-statistica.sm, Banca Centrale di San Marino) non sono al momento estratte in
-automatico: pubblicano solo bollettini PDF, non un'API o un dataset
-scaricabile in formato strutturato. Un watcher segnala e scarica i nuovi
-bollettini man mano che escono, ma l'inserimento dei dati resta manuale, per
-evitare che un errore di lettura di una tabella PDF finisca online senza
-controllo.
+Le fonti statistiche sammarinesi pubblicano solo bollettini in PDF, non un formato leggibile automaticamente: per queste fonti i dati vengono inseriti a mano dopo ogni nuova pubblicazione, non dalla pipeline.
 
-## Conversione in EUR
+## Conversione in euro
 
-Regola generale: **si preferisce sempre una serie già denominata in EUR alla
-fonte**, piuttosto che convertire un valore che la fonte stessa ha già
-convertito in un'altra valuta (tipicamente USD). Riconvertire un dato che è
-già passato una volta da EUR a USD introduce una doppia conversione ed è
-metodologicamente più debole. Per questo, quando esiste, si usa sempre la
-serie in valuta locale (San Marino ha l'euro come valuta nazionale).
+Quando una fonte pubblica già un dato in euro, lo usiamo così com'è. Quando pubblica solo in dollari, lo convertiamo con il tasso di cambio medio annuo della Banca Centrale Europea relativo a quell'anno.
 
-Esempio concreto: `NY.GDP.MKTP.CD` (PIL) mantiene il codice storico del World
-Bank per "PIL, dollari correnti": non può essere rinominato, l'URL pubblico
-`/dati/NY.GDP.MKTP.CD` è già in uso, ma la pipeline estrae la serie
-`NY.GDP.MKTP.CN` (valuta locale, EUR) e la scrive sotto quel codice. È una
-scelta editoriale deliberata: il nome del codice non descrive più la valuta
-reale del dato pubblicato.
+Questa conversione copre solo gli anni conclusi dal 1999 (nascita dell'euro) in poi. Per gli anni futuri, o precedenti al 1999, non pubblichiamo un valore in euro: non esiste un tasso di cambio reale per quegli anni, quindi non ne calcoliamo uno.
 
-Quando una fonte pubblica solo in USD e non esiste una serie in valuta
-locale (es. `IMF.NGDPD`, `IMF.NGDPDPC`, `IMF.BCA`), la pipeline converte con
-il tasso di cambio di riferimento medio annuo BCE. La conversione copre solo
-gli anni per cui esiste un tasso medio annuo realmente concluso, dal 1999
-(introduzione dell'euro) fino all'ultimo anno solare completato. Per gli
-anni fuori da questo intervallo (proiezioni non ancora trascorse, o
-precedenti al 1999) non pubblichiamo un `value_eur`/`value_display`: non
-esiste un tasso reale da usare, e inventarne uno sarebbe metodologicamente
-scorretto. Fonte e tasso usato sono sempre documentati nel campo nota del
-dato pubblicato.
+I valori espressi in parità di potere d'acquisto (PPP) non vengono convertiti: non sono legati a un tasso di cambio.
 
-Gli indicatori in **PPP** (es. PIL pro capite a parità di potere d'acquisto)
-non vengono trattati come una conversione di cambio: PPP è un concetto
-diverso, un tasso di cambio reale non si applica.
+## Proiezioni
 
-## Dati consuntivi vs proiezioni
+Il Fondo Monetario Internazionale pubblica anche proiezioni per gli anni futuri, insieme ai dati consuntivi. Mostriamo queste proiezioni solo per l'anno corrente e il successivo. Per un'economia piccola come San Marino, le proiezioni più lontane nel tempo tendono a ripetere lo stesso numero anno dopo anno: non aggiungono informazione utile, quindi non le pubblichiamo.
 
-Il World Economic Outlook dell'FMI include proiezioni fino a diversi anni
-nel futuro. L'API IMF DataMapper non marca esplicitamente, punto per punto,
-quali anni sono consuntivi e quali proiezioni: quell'informazione esiste
-solo nell'appendice statistica della pubblicazione WEO (PDF), rilasciata
-due volte l'anno (aprile e ottobre).
+Quando un valore è una proiezione e non un dato consuntivo, la pagina dell'indicatore lo segnala.
 
-Per questo l'anno di cutoff (`weo_vintage.estimates_start_year` in
-`config/indicators.yaml`) è impostato a mano ad ogni nuova uscita del WEO,
-leggendo l'appendice statistica ufficiale. Vintage corrente: **{{ vedi
-config/indicators.yaml, campo weo_vintage.release }}**.
+## Aggiornamento dei dati
 
-**Quanto lontano pubblichiamo le proiezioni.** L'FMI proietta fino a 5 anni
-avanti, ma per un microstato senza un modello previsionale dedicato gli anni
-più lontani spesso ripetono lo stesso valore anno su anno, proiezioni che è
-sicuramente impossibile azzeccare con quella precisione, e che aggiungono
-falsa precisione più che informazione utile. Per questo pubblichiamo le
-proiezioni solo fino a un anno oltre quello corrente, non oltre: è una
-scelta editoriale deliberata, non un limite della fonte. Le righe per anni
-più lontani, se presenti da versioni precedenti della pipeline, vengono
-rimosse automaticamente ad ogni esecuzione.
+Scriviamo un valore solo quando cambia rispetto a quello già pubblicato, non ogni volta che la pipeline gira. La data di ultimo aggiornamento di un dato riflette quindi l'ultima volta che la fonte ha davvero pubblicato qualcosa di nuovo.
 
-## Aggiornamento dei dati e "freschezza"
+## Revisioni
 
-La pipeline scrive una riga solo quando il valore è nuovo o diverso da
-quello già pubblicato, non ad ogni esecuzione. La data di ultimo
-aggiornamento mostrata sul sito riflette quindi l'ultima volta che la fonte
-ha effettivamente pubblicato un valore nuovo, non l'ultima volta che la
-pipeline è stata eseguita.
+Le fonti possono rivedere i propri dati storici nel tempo. Se un valore che avevi consultato in passato oggi risulta leggermente diverso, è quasi sempre per questo motivo.

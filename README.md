@@ -1,32 +1,30 @@
 # oesm-pipeline
 
-Pipeline di estrazione dati economici per [OESM.net](https://oesm.net), l'Osservatorio
-Economico di San Marino. Scrive nella tabella `indicatori_dati` su Supabase, condivisa
-con il CMS locale e il sito pubblico.
+Scarica dati economici su San Marino da World Bank e Fondo Monetario Internazionale, li pulisce e li pubblica su [OESM.net](https://oesm.net), l'Osservatorio Economico di San Marino.
 
-Per il contesto metodologico completo (fonti, criterio EUR, gestione stime/proiezioni)
-vedi [`METHODOLOGY.md`](./METHODOLOGY.md).
+Per capire come vengono trattati i dati (fonti, conversione in euro, proiezioni), vedi [METHODOLOGY.md](./METHODOLOGY.md).
 
-## Setup
+## Installazione
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-cp .env.example .env   # poi compila SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY
+cp .env.example .env
 ```
+
+Apri `.env` e inserisci l'URL del progetto Supabase e la service role key.
 
 ## Uso
 
 ```bash
-# Un giro di prova, senza scrivere nulla: mostra solo cosa verrebbe scritto
+# Prova senza scrivere nulla
 oesm-pipeline --dry-run
 
-# Un solo indicatore, utile per validare una fonte nuova prima di allargare
-oesm-pipeline --indicator IMF.PCPIPCH --dry-run
+# Un solo indicatore
 oesm-pipeline --indicator IMF.PCPIPCH
 
-# Tutti gli indicatori attivi in config/indicators.yaml
+# Tutti gli indicatori attivi
 oesm-pipeline
 ```
 
@@ -36,20 +34,10 @@ oesm-pipeline
 pytest -v
 ```
 
-I test degli estrattori usano risposte fedeli a quelle reali di IMF/World Bank,
-salvate in `tests/fixtures/`: nessuna chiamata di rete durante i test.
-
 ## Aggiungere un indicatore
 
-1. Verificare il codice presso la fonte (IMF DataMapper o World Bank API).
-2. Aggiungere una voce in `config/indicators.yaml`: categoria, indicator_code
-   definitivo (**stabile per sempre una volta pubblicato**), regola di conversione EUR.
-3. `oesm-pipeline --indicator <CODE> --dry-run` per validare prima di scrivere.
-4. Verificare su CMS locale → Archivio e sul sito pubblico `/dati/[code]`.
+Aggiungi una voce in `config/indicators.yaml` (categoria, codice della fonte, regola di conversione), poi valida con `--dry-run` prima di scrivere per davvero. Una volta pubblicato, il codice dell'indicatore non va più cambiato: diventa parte dell'indirizzo della sua pagina.
 
-## Cosa questa pipeline NON fa
+## Cosa non fa
 
-Le fonti sammarinesi (statistica.sm, BCSM) non sono automatizzate in scrittura:
-solo un watcher che segnala e scarica nuovi bollettini PDF (vedi
-`extractors/watchers/`), mai una scrittura diretta su Supabase. La scelta è
-deliberata, vedi METHODOLOGY.md.
+Le fonti statistiche sammarinesi pubblicano solo bollettini in PDF, non un formato leggibile automaticamente. Per queste fonti la pipeline si limita a segnalare quando esce un nuovo bollettino: i dati vengono inseriti a mano, per evitare errori di lettura.
